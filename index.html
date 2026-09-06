@@ -19,7 +19,12 @@
             min-height: 100vh;
             color: #4a4a4a;
             overflow: hidden;
+            transition: background-color 1.5s ease;
         }
+        body.dark-mode {
+            background-color: #111111;
+        }
+
         .container {
             width: 90%;
             max-width: 400px;
@@ -51,21 +56,7 @@
             100% { opacity: 0.6; }
         }
 
-        /* 2. スライドショー画面 */
-        #slideshow-screen {
-            display: none;
-        }
-        .slide-img {
-            width: 100%;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-            opacity: 0;
-            transition: opacity 1s ease-in-out;
-        }
-
-        /* 3. メッセージ画面 */
+        /* 2. 手紙（メッセージ）画面 */
         #message-screen {
             display: none;
             background: #ffffff;
@@ -75,6 +66,7 @@
             text-align: left;
             max-height: 70vh;
             overflow-y: auto;
+            transition: opacity 1s ease;
         }
         .message-text {
             font-size: 15px;
@@ -94,63 +86,72 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
+
+        /* 3. ぼわーっと出る一言（暗転後） */
+        #fade-word-screen {
+            display: none;
+            color: #ffffff;
+            font-size: 22px;
+            font-weight: bold;
+            line-height: 1.6;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            letter-spacing: 2px;
+        }
+
+        /* 4. 最後の写真画面 */
+        #final-photo-screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+        }
+        .final-img {
+            width: 100%;
+            max-height: 60vh;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <!-- STEP 1: 封筒画面 -->
     <div id="envelope-screen" onclick="startExperience()">
         <div class="envelope-icon">✉️</div>
         <div class="tap-instruction">タップして開く</div>
     </div>
 
-    <div id="slideshow-screen">
-        <img id="slideshow-image" class="slide-img" src="" alt="Memory">
-    </div>
-
+    <!-- STEP 2: メッセージ画面（タイピング演出） -->
     <div id="message-screen">
         <div class="message-text" id="typed-text"></div><span class="cursor" id="cursor"></span>
+    </div>
+
+    <!-- STEP 3: ぼわーっと出る一言 -->
+    <div id="fade-word-screen" id="fade-text">
+        いつも本当にありがとう。<br>これからもよろしくね。
+    </div>
+
+    <!-- STEP 4: 最後の写真 -->
+    <div id="final-photo-screen">
+        <img class="final-img" id="final-image" src="" alt="1st Anniversary Photo">
     </div>
 </div>
 
 <script>
-    // ▼ 1. 画像のURL（またはパス）を順番に入れてください
-    const photos = [
-        "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500", // 画像1
-        "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=500", // 画像2
-        "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=500"  // 画像3
-    ];
+    // ▼ 1. 最後に表示したい写真のURLを入力してください
+    const finalPhotoUrl = "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500";
 
     // ▼ 2. 手紙の本文を入力してください（\n で改行できます）
-    const message = `〇〇へ\n\n今日で付き合って1年だね。\nあっという間の1年だったけど、振り返ると楽しい思い出ばかりです。\n\nいつも隣で笑って支えてくれて本当にありがとう。\n\nこれからも一緒にいろんなところに行って、たくさんの思い出を作っていこうね。\n\nいつもありがとう。これからもよろしく！`;
+    const message = `〇〇へ\n\n今日で付き合って1年だね。\nあっという間の1年だったけど、振り返ると楽しい思い出ばかりです。\n\nいつも隣で笑って支えてくれて本当にありがとう。\n\nこれからも一緒にいろんなところに行って、たくさんの思い出を作っていこうね。`;
 
-    // 演出用プログラム
-    let photoIndex = 0;
-    const slideImg = document.getElementById('slideshow-image');
+    // ▼ 3. 暗転後に浮き出る一言を変更したい場合は、上記の HTML 内 (<div id="fade-word-screen">) の文章を直接編集してください。
 
     function startExperience() {
         document.getElementById('envelope-screen').style.display = 'none';
-        document.getElementById('slideshow-screen').style.display = 'block';
-        showNextPhoto();
-    }
-
-    function showNextPhoto() {
-        if (photoIndex < photos.length) {
-            slideImg.style.opacity = 0;
-            setTimeout(() => {
-                slideImg.src = photos[photoIndex];
-                slideImg.style.opacity = 1;
-                photoIndex++;
-                setTimeout(showNextPhoto, 3000); // 3秒ごとに切り替え
-            }, 500);
-        } else {
-            // スライドショー終了後、メッセージへ
-            setTimeout(() => {
-                document.getElementById('slideshow-screen').style.display = 'none';
-                document.getElementById('message-screen').style.display = 'block';
-                typeWriter();
-            }, 1000);
-        }
+        document.getElementById('message-screen').style.display = 'block';
+        typeWriter();
     }
 
     let charIndex = 0;
@@ -161,7 +162,45 @@
             setTimeout(typeWriter, 100); // タイピング速度（ミリ秒）
         } else {
             document.getElementById('cursor').style.display = 'none';
+            // タイピング終了後、2.5秒待ってから暗転フェーズへ
+            setTimeout(transitionToDark, 2500);
         }
+    }
+
+    function transitionToDark() {
+        const msgScreen = document.getElementById('message-screen');
+        msgScreen.style.opacity = '0';
+
+        setTimeout(() => {
+            msgScreen.style.display = 'none';
+            document.body.classList.add('dark-mode'); // 背景を黒に変更
+
+            // 1.5秒後に一言をぼわーっと表示
+            setTimeout(() => {
+                const fadeWord = document.getElementById('fade-word-screen');
+                fadeWord.style.display = 'block';
+                setTimeout(() => { fadeWord.style.opacity = '1'; }, 50);
+
+                // 一言を表示後、3.5秒待って最後の写真へ
+                setTimeout(() => {
+                    fadeWord.style.opacity = '0';
+                    setTimeout(() => {
+                        fadeWord.style.display = 'none';
+                        showFinalPhoto();
+                    }, 1500);
+                }, 3500);
+
+            }, 1000);
+        }, 1000);
+    }
+
+    function showFinalPhoto() {
+        const photoScreen = document.getElementById('final-photo-screen');
+        document.getElementById('final-image').src = finalPhotoUrl;
+        photoScreen.style.display = 'block';
+        setTimeout(() => {
+            photoScreen.style.opacity = '1';
+        }, 50);
     }
 </script>
 </body>
